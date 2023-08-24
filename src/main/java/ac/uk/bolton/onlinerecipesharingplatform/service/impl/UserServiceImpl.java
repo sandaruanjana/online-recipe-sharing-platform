@@ -1,11 +1,16 @@
 package ac.uk.bolton.onlinerecipesharingplatform.service.impl;
 
+import ac.uk.bolton.onlinerecipesharingplatform.dto.LikeRecipeDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.dto.TokenDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.dto.UserDTO;
+import ac.uk.bolton.onlinerecipesharingplatform.entity.Recipe;
 import ac.uk.bolton.onlinerecipesharingplatform.entity.User;
 import ac.uk.bolton.onlinerecipesharingplatform.enums.RoleType;
 import ac.uk.bolton.onlinerecipesharingplatform.exception.InternalServerErrorException;
+import ac.uk.bolton.onlinerecipesharingplatform.repository.RecipeRepository;
 import ac.uk.bolton.onlinerecipesharingplatform.repository.UserRepository;
+import ac.uk.bolton.onlinerecipesharingplatform.request.LoginRequest;
+import ac.uk.bolton.onlinerecipesharingplatform.request.SignupRequest;
 import ac.uk.bolton.onlinerecipesharingplatform.service.UserService;
 import ac.uk.bolton.onlinerecipesharingplatform.util.AjaxResponse;
 import ac.uk.bolton.onlinerecipesharingplatform.util.JwtUtil;
@@ -29,6 +34,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -37,30 +43,31 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService, UserDetailsService {
-
     private final UserRepository userRepository;
+    private final RecipeRepository recipeRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper mapper;
     private final JwtUtil jwtUtils;
 
     @Override
-    public AjaxResponse save(ac.uk.bolton.ecommercebackend.request.SignupRequest signupRequest) {
+    public AjaxResponse save(SignupRequest signupRequest) {
         try {
             signupRequest.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
             User user = mapper.map(signupRequest, User.class);
             user.setRole(RoleType.ROLE_USER.name());
             user.setCreated_at(new Timestamp(System.currentTimeMillis()));
             User registeUser = userRepository.save(user);
+            if (registeUser == null) {
+                return AjaxResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "User registration failed");
+            }
             return AjaxResponse.success();
         } catch (Exception e) {
             return AjaxResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
-
-
     }
 
     @Override
-    public TokenDTO login(Authentication authentication, HttpServletRequest request, ac.uk.bolton.ecommercebackend.request.LoginRequest loginDTO) {
+    public TokenDTO login(Authentication authentication, HttpServletRequest request, LoginRequest loginDTO) {
         TokenDTO tokenDTO = new TokenDTO();
 
         try {
@@ -86,9 +93,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDTO getCurrentUser() {
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         Jwt principal = (Jwt) auth.getPrincipal();
         String email = principal.getClaim("sub");
 
@@ -102,8 +107,47 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public AjaxResponse likeRecipe(LikeRecipeDTO likeRecipeDto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Jwt principal = (Jwt) auth.getPrincipal();
+        String email = principal.getClaim("sub");
+        User user = userRepository.findByEmail(email);
+        Optional<Recipe> optionalRecipe = recipeRepository.findById(likeRecipeDto.getRecipeId());
+        if (optionalRecipe.isPresent()) {
+            Recipe recipe = optionalRecipe.get();
+            
+            if (recipe.getLikedUsers().contains(user)) {
+                recipe.getLikedUsers().remove(user);
+                recipe.setLikes(recipe.getLikes() - 1);
+                Recipe recipeObj = recipeRepository.save(recipe);
 
+                if (recipeObj != null) {
+                    return AjaxResponse.success(likeRecipeDto);
+                } else {
+                    return AjaxResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong!");
+                }
+            }
+
+            if (recipe.getLikes() == 0) {
+                recipe.setLikes(1);
+            } else {
+                recipe.setLikes(recipe.getLikes() + 1);
+            }
+            recipe.getLikedUsers().add(user);
+            Recipe recipeObj = recipeRepository.save(recipe);
+
+            if (recipeObj != null) {
+                return AjaxResponse.success(likeRecipeDto);
+            } else {
+                return AjaxResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong!");
+            }
+        } else {
+            return AjaxResponse.error(HttpStatus.NOT_FOUND, "Recipe not found");
+        }
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(username);
 
         if (user == null) {

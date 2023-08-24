@@ -1,4 +1,4 @@
-package ac.uk.bolton.ecommercebackend.request;
+package ac.uk.bolton.onlinerecipesharingplatform.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

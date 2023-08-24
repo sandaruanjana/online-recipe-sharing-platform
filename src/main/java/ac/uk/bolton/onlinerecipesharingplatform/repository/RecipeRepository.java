@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
-    @Query("SELECT r FROM Recipe r WHERE r.is_approved = true")
-    List<Recipe> findAllByApproved();
+    @Query("SELECT r FROM Recipe r WHERE r.is_approved = ?1")
+    List<Recipe> findAllByIsApproved(boolean is_approved);
 }

@@ -1,6 +1,7 @@
 package ac.uk.bolton.onlinerecipesharingplatform.service.impl;
 
 import ac.uk.bolton.onlinerecipesharingplatform.dto.RecipeDTO;
+import ac.uk.bolton.onlinerecipesharingplatform.dto.UpdateRecipeApproveDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.dto.UserDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.entity.Recipe;
 import ac.uk.bolton.onlinerecipesharingplatform.entity.RecipeImage;
@@ -31,13 +32,9 @@ import java.util.List;
 @Slf4j
 public class RecipeServiceImpl implements RecipeService {
     private final RecipeImageRepository recipeImageRepository;
-
     private final RecipeRepository recipeRepository;
-
     private final UserService userService;
-
     private final CategoryService categoryService;
-
     private final ModelMapper modelMapper;
 
     @Value("${upload.directory}")
@@ -48,8 +45,7 @@ public class RecipeServiceImpl implements RecipeService {
         Recipe recipe = modelMapper.map(recipeDTO, Recipe.class);
         recipe.set_approved(false);
         recipe.setCreated_at(new Timestamp(System.currentTimeMillis()));
-
-        recipe.setCategory(categoryService.getCategoryById(Long.parseLong(recipeDTO.getCategory_id())).orElse(null));
+        recipe.setCategory(categoryService.getCategoryById(recipeDTO.getCategory_id()).orElse(null));
 
         UserDTO currentUser = userService.getCurrentUser();
 
@@ -63,7 +59,6 @@ public class RecipeServiceImpl implements RecipeService {
         recipeImage.setImage_url(imageUrl);
         recipeImage.setCreated_at(new Timestamp(System.currentTimeMillis()));
         recipeImageRepository.save(recipeImage);
-
 
         return modelMapper.map(recipe, RecipeDTO.class);
     }
@@ -84,7 +79,13 @@ public class RecipeServiceImpl implements RecipeService {
         }
 
         categoryService.getCategoryById(recipe.getCategory().getId()).ifPresent(category -> {
-            recipeDTO.setCategory_id(category.getName());
+            recipeDTO.setCategory_name(category.getName());
+        });
+
+        recipe.getLikedUsers().forEach(user -> {
+            if (user.getId().equals(userService.getCurrentUser().getId())) {
+                recipeDTO.setCurrent_user_liked(true);
+            }
         });
 
         return recipeDTO;
@@ -103,7 +104,13 @@ public class RecipeServiceImpl implements RecipeService {
                     }
 
                     categoryService.getCategoryById(recipe.getCategory().getId()).ifPresent(category -> {
-                        recipeDTO.setCategory_id(category.getName());
+                        recipeDTO.setCategory_name(category.getName());
+                    });
+
+                    recipe.getLikedUsers().forEach(user -> {
+                        if (user.getId().equals(userService.getCurrentUser().getId())) {
+                            recipeDTO.setCurrent_user_liked(true);
+                        }
                     });
 
                     return recipeDTO;
@@ -113,8 +120,8 @@ public class RecipeServiceImpl implements RecipeService {
 
 
     @Override
-    public List<RecipeDTO> getApprovedRecipes() {
-        return recipeRepository.findAllByApproved()
+    public List<RecipeDTO> getAllByApproved(int isApproved) {
+        return recipeRepository.findAllByIsApproved(isApproved == 1)
                 .stream()
                 .map(recipe -> {
                     RecipeDTO recipeDTO = modelMapper.map(recipe, RecipeDTO.class);
@@ -125,7 +132,7 @@ public class RecipeServiceImpl implements RecipeService {
                     }
 
                     categoryService.getCategoryById(recipe.getCategory().getId()).ifPresent(category -> {
-                        recipeDTO.setCategory_id(category.getName());
+                        recipeDTO.setCategory_name(category.getName());
                     });
 
                     return recipeDTO;
@@ -140,6 +147,17 @@ public class RecipeServiceImpl implements RecipeService {
             return null;
         }
         recipe = modelMapper.map(recipeDTO, Recipe.class);
+        recipe = recipeRepository.save(recipe);
+        return modelMapper.map(recipe, RecipeDTO.class);
+    }
+
+    @Override
+    public RecipeDTO updateApproval(UpdateRecipeApproveDTO updateRecipeApproveDTO) {
+        Recipe recipe = recipeRepository.findById(updateRecipeApproveDTO.getId()).orElse(null);
+        if (recipe == null) {
+            return null;
+        }
+        recipe.set_approved(updateRecipeApproveDTO.getIs_approved() == 1);
         recipe = recipeRepository.save(recipe);
         return modelMapper.map(recipe, RecipeDTO.class);
     }

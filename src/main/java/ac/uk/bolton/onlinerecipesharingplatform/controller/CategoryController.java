@@ -14,14 +14,19 @@ import java.util.Optional;
  * @author Sandaru Anjana <sandaruanjana@outlook.com>
  */
 @RestController
-@RequestMapping("/categories")
+@RequestMapping("/api/v1/category")
 public class CategoryController {
-
     private final CategoryService categoryService;
 
     @Autowired
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Category> createCategory(@RequestBody Category category) {
+        Category createdCategory = categoryService.createCategory(category);
+        return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -35,12 +40,6 @@ public class CategoryController {
         Optional<Category> category = categoryService.getCategoryById(id);
         return category.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @PostMapping
-    public ResponseEntity<Category> createCategory(@RequestBody Category category) {
-        Category createdCategory = categoryService.createCategory(category);
-        return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

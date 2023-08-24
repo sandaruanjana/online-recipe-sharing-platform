@@ -3,6 +3,8 @@ package ac.uk.bolton.onlinerecipesharingplatform.controller;
 
 import ac.uk.bolton.onlinerecipesharingplatform.dto.TokenDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.exception.InternalServerErrorException;
+import ac.uk.bolton.onlinerecipesharingplatform.request.LoginRequest;
+import ac.uk.bolton.onlinerecipesharingplatform.request.SignupRequest;
 import ac.uk.bolton.onlinerecipesharingplatform.service.UserService;
 import ac.uk.bolton.onlinerecipesharingplatform.util.AjaxResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +33,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/signup")
-    public AjaxResponse<Object> signup(@RequestBody ac.uk.bolton.ecommercebackend.request.SignupRequest signupRequest) {
+    public AjaxResponse<Object> signup(@RequestBody SignupRequest signupRequest) {
         try {
             userService.save(signupRequest);
         } catch (DataIntegrityViolationException e) {
@@ -42,9 +44,8 @@ public class AuthController {
         return AjaxResponse.success();
     }
 
-
     @PostMapping("/login")
-    public AjaxResponse<Object> login(HttpServletRequest request, @RequestBody ac.uk.bolton.ecommercebackend.request.LoginRequest loginRequest) {
+    public AjaxResponse<Object> login(HttpServletRequest request, @RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));

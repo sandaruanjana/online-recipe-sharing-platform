@@ -1,11 +1,10 @@
 package ac.uk.bolton.onlinerecipesharingplatform.controller;
 
+import ac.uk.bolton.onlinerecipesharingplatform.dto.LikeRecipeDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.service.UserService;
 import ac.uk.bolton.onlinerecipesharingplatform.util.AjaxResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Sandaru Anjana <sandaruanjana@outlook.com>
@@ -19,5 +18,10 @@ public class UserController {
     @GetMapping("/me")
     public AjaxResponse<Object> getCurrentUser() {
         return AjaxResponse.success(userService.getCurrentUser());
+    }
+
+    @PostMapping("/like/recipe")
+    public AjaxResponse<Object> likeRecipe(@RequestBody LikeRecipeDTO likeRecipeDTO) {
+        return userService.likeRecipe(likeRecipeDTO);
     }
 }

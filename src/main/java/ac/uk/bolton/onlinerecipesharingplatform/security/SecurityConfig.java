@@ -33,7 +33,6 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SecurityConfig {
     public static final String AUTHORITIES_CLAIM_NAME = "roles";
-
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -62,7 +61,6 @@ public class SecurityConfig {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
         authoritiesConverter.setAuthorityPrefix("");
         authoritiesConverter.setAuthoritiesClaimName(AUTHORITIES_CLAIM_NAME);
-
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
         return converter;
@@ -77,10 +75,8 @@ public class SecurityConfig {
     @Bean
     @Primary
     public JwtDecoder jwtDecoder() {
-
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator();
         OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(audienceValidator);
-
         byte[] bytes = jwtSecret.getBytes();
         SecretKeySpec originalKey = new SecretKeySpec(bytes, 0, bytes.length, "RSA");
         NimbusJwtDecoder build = NimbusJwtDecoder.withSecretKey(originalKey).macAlgorithm(MacAlgorithm.HS512).build();
@@ -94,10 +90,8 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("*"));
-
         final var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
         return source;
     }
 }

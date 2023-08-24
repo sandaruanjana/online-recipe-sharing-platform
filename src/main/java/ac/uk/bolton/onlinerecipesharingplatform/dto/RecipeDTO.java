@@ -18,5 +18,10 @@ public class RecipeDTO implements Serializable {
     int serving_size;
     Timestamp created_at;
     String imageUrl;
-    String category_id;
+    Long category_id;
+    String category_name;
+    int likes;
+    boolean current_user_liked;
+
+
 }
