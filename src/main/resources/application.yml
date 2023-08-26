@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/recipe_sharing_platform?createDatabaseIfNotExist=true&autoReconnect=true&useSSL=false
+    username: root
+    password: 1234
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+    generate-ddl: true
+jwt:
+  secret: zSLkGjZCe1mJbkLlI77Mw9eP0wx7XZJC5TbIE6/F5we7brZ0Pp+Et9e0A4QXNWaA
+upload:
+  directory: src/main/resources/static/images
