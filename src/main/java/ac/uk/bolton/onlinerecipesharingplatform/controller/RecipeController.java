@@ -5,6 +5,9 @@ import ac.uk.bolton.onlinerecipesharingplatform.dto.UpdateRecipeApproveDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.service.RecipeService;
 import ac.uk.bolton.onlinerecipesharingplatform.util.AjaxResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,5 +69,23 @@ public class RecipeController {
     public ResponseEntity<Void> deleteRecipe(@PathVariable Long id) {
         recipeService.deleteRecipe(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/image/{id}")
+    public ResponseEntity<Resource> getImage(@PathVariable String id) {
+        try {
+
+            RecipeDTO recipeById = recipeService.getRecipeById(Long.parseLong(id));
+
+            // Load the image resource from the classpath
+            Resource resource = new ClassPathResource("static/images/" + recipeById.getImageUrl());
+
+            // Return the image as a ResponseEntity
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
