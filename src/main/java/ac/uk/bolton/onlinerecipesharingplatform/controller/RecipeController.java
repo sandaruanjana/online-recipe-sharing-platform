@@ -75,7 +75,7 @@ public class RecipeController {
     public ResponseEntity<Resource> getImage(@PathVariable String id) {
         try {
 
-            RecipeDTO recipeById = recipeService.getRecipeById(Long.parseLong(id));
+            RecipeDTO recipeById = recipeService.getRecipeImageByRecipeId(Long.parseLong(id));
 
             // Load the image resource from the classpath
             Resource resource = new ClassPathResource("static/images/" + recipeById.getImageUrl());

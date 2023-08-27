@@ -167,6 +167,28 @@ public class RecipeServiceImpl implements RecipeService {
         recipeRepository.deleteById(id);
     }
 
+    @Override
+    public RecipeDTO getRecipeImageByRecipeId(Long id) {
+        Recipe recipe = recipeRepository.findById(id).orElse(null);
+        if (recipe == null) {
+            return null;
+        }
+
+        RecipeDTO recipeDTO = modelMapper.map(recipe, RecipeDTO.class);
+
+        RecipeImage recipeImage = recipeImageRepository.findByRecipeId(recipe.getId());
+
+        if (recipeImage != null) {
+            recipeDTO.setImageUrl(recipeImage.getImage_url());
+        }
+
+        categoryService.getCategoryById(recipe.getCategory().getId()).ifPresent(category -> {
+            recipeDTO.setCategory_name(category.getName());
+        });
+
+        return recipeDTO;
+    }
+
     private String saveBase64Image(Long recipeId, String base64Image) {
 
         int commaIndex = base64Image.indexOf(",");
