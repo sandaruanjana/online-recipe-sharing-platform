@@ -4,13 +4,17 @@ import ac.uk.bolton.onlinerecipesharingplatform.dto.RecipeDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.dto.UpdateRecipeApproveDTO;
 import ac.uk.bolton.onlinerecipesharingplatform.service.RecipeService;
 import ac.uk.bolton.onlinerecipesharingplatform.util.AjaxResponse;
+import jakarta.activation.FileTypeMap;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -21,6 +25,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecipeController {
     private final RecipeService recipeService;
+
+    @Value("${upload.directory}")
+    private String uploadDirectory;
 
     @PostMapping
     public AjaxResponse<RecipeDTO> createRecipe(@RequestBody RecipeDTO recipeDTO) {
@@ -72,18 +79,15 @@ public class RecipeController {
     }
 
     @GetMapping("/image/{id}")
-    public ResponseEntity<Resource> getImage(@PathVariable String id) {
+    public ResponseEntity<byte[]> getImage(@PathVariable String id) {
         try {
 
             RecipeDTO recipeById = recipeService.getRecipeImageByRecipeId(Long.parseLong(id));
 
-            // Load the image resource from the classpath
-            Resource resource = new ClassPathResource("static/images/" + recipeById.getImageUrl());
+            File img = new File(uploadDirectory + recipeById.getImageUrl());
 
             // Return the image as a ResponseEntity
-            return ResponseEntity.ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(resource);
+            return ResponseEntity.ok().contentType(MediaType.valueOf(FileTypeMap.getDefaultFileTypeMap().getContentType(img))).body(Files.readAllBytes(img.toPath()));
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
