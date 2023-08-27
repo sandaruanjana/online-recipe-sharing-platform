@@ -135,6 +135,12 @@ public class RecipeServiceImpl implements RecipeService {
                         recipeDTO.setCategory_name(category.getName());
                     });
 
+                    recipe.getLikedUsers().forEach(user -> {
+                        if (user.getId().equals(userService.getCurrentUser().getId())) {
+                            recipeDTO.setCurrent_user_liked(true);
+                        }
+                    });
+
                     return recipeDTO;
                 })
                 .toList();
