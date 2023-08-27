@@ -16,4 +16,5 @@ public interface RecipeService {
     RecipeDTO updateRecipe(Long id, RecipeDTO recipeDTO);
     RecipeDTO updateApproval(UpdateRecipeApproveDTO updateRecipeApproveDTO);
     void deleteRecipe(Long id);
+    RecipeDTO getRecipeImageByRecipeId(Long id);
 }
